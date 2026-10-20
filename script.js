@@ -193,7 +193,7 @@
   const butterfly2 = document.getElementById('butterfly2');
 
   // Audio state
-  let audioEnabled = false;
+  let audioEnabled = true; // Bật âm thanh mặc định
   let audioCtx = null;
 
   // Garden State
@@ -255,10 +255,37 @@
         audioCtx = new AudioContext();
       }
     }
-    if (audioCtx && audioCtx.state === 'suspended') {
+    if (audioCtx && audioCtx.state !== 'running') {
       audioCtx.resume();
+      // iOS: phát một buffer rỗng trong thao tác chạm để mở khoá âm thanh
+      try {
+        const src = audioCtx.createBufferSource();
+        src.buffer = audioCtx.createBuffer(1, 1, 22050);
+        src.connect(audioCtx.destination);
+        src.start(0);
+      } catch (e) {
+        // Bỏ qua
+      }
     }
   }
+
+  // iOS: vẫn phát âm thanh khi điện thoại đang gạt sang chế độ im lặng
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  } catch (e) {
+    // Bỏ qua
+  }
+
+  // Trình duyệt (nhất là mobile) chỉ cho phát âm thanh sau thao tác đầu tiên
+  // của người dùng, nên mở khoá ngay lần chạm / bấm đầu tiên ở bất kỳ đâu.
+  const unlockEvents = ['pointerdown', 'touchend', 'click', 'keydown'];
+  function unlockAudio() {
+    initAudio();
+    if (audioCtx && audioCtx.state === 'running') {
+      unlockEvents.forEach((ev) => document.removeEventListener(ev, unlockAudio, true));
+    }
+  }
+  unlockEvents.forEach((ev) => document.addEventListener(ev, unlockAudio, true));
 
   // Play gentle bell/chime note (Pentatonic scale: C5, D5, E5, G5, A5, C6)
   const pentatonicFrequencies = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
@@ -868,6 +895,9 @@
   }).observe(document.body, { childList: true, subtree: true });
 
   // Initialize Garden
+  btnAudio.classList.toggle('active', audioEnabled);
+  btnAudio.setAttribute('aria-pressed', String(audioEnabled));
+  audioIcon.textContent = audioEnabled ? '🎵' : '🔔';
   applyLanguage(currentLang);
   populateGarden();
 })();
