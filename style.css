@@ -1,0 +1,868 @@
+/* ==========================================================
+   VƯỜN HOA ONLINE - SOOTHING PASTEL GARDEN
+   Màu sắc dịu mắt, hài hoà, hoa đung đưa tự nhiên theo gió
+   ========================================================== */
+
+:root {
+  /* Color Palette - Pastel, dịu mắt, trang nhã */
+  --sky-gradient-top: #fed6e3;
+  --sky-gradient-bottom: #fbfcdb;
+  --ground-dark: #3a5a40;
+  --ground-light: #588157;
+  --stem-color: #60805c;
+  --stem-highlight: #7da578;
+  --leaf-color: #6b8f68;
+
+  /* Flower tones (Pastel, không chói, chuyển sắc mềm) */
+  --petal-pink: #f7cad0;
+  --petal-blush: #f4abb7;
+  --petal-peach: #ffd6ba;
+  --petal-lavender: #d8bbff;
+  --petal-cream: #fff9ed;
+  --petal-rose: #ea9ab2;
+  --petal-buttercup: #fae588;
+  --flower-center: #ffd166;
+
+  /* UI Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-shadow: 0 12px 36px rgba(100, 80, 90, 0.08);
+  --text-primary: #3d3438;
+  --text-secondary: #6e6167;
+  --accent-rose: #d87088;
+
+  /* Wind speed factor variable (controlled via JS) */
+  --wind-factor: 1;
+  --btn-hover-bg: rgba(255, 255, 255, 0.65);
+}
+
+/* THEMES */
+body.theme-sunrise {
+  --sky-gradient-top: #fce2db;
+  --sky-gradient-bottom: #ffedd2;
+  --ground-dark: #3a5840;
+  --ground-light: #597d58;
+}
+
+body.theme-sunset {
+  --sky-gradient-top: #d8c2e6;
+  --sky-gradient-bottom: #fedac9;
+  --ground-dark: #2f4339;
+  --ground-light: #446554;
+  --glass-bg: rgba(255, 248, 250, 0.4);
+}
+
+body.theme-moonlight {
+  --sky-gradient-top: #242b45;
+  --sky-gradient-bottom: #474768;
+  --ground-dark: #1b2820;
+  --ground-light: #2b3d32;
+  --stem-color: #3f5541;
+  --text-primary: #f2e9ed;
+  --text-secondary: #c7bcc2;
+  --glass-bg: rgba(30, 36, 56, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+  /* Nền hover tối hơn để chữ sáng vẫn đọc được trong chế độ đêm */
+  --btn-hover-bg: rgba(255, 255, 255, 0.14);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* Comfortaa hiển thị chữ Kirin (tiếng Mông Cổ) mà Quicksand không có */
+  font-family: 'Quicksand', 'Comfortaa', sans-serif;
+  color: var(--text-primary);
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================
+   SKY & CELESTIAL BACKGROUND
+   ========================================================== */
+.sky-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, var(--sky-gradient-top) 0%, var(--sky-gradient-bottom) 70%, rgba(200, 220, 200, 0.3) 100%);
+  transition: background 1.5s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.celestial-body {
+  position: absolute;
+  top: 10%;
+  right: 15%;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 240, 0.95) 0%, rgba(255, 240, 210, 0.5) 50%, rgba(255, 255, 255, 0) 75%);
+  box-shadow: 0 0 50px rgba(255, 245, 210, 0.6);
+  transition: all 1.8s ease;
+  animation: gentlePulse 8s ease-in-out infinite alternate;
+}
+
+body.theme-moonlight .celestial-body {
+  background: radial-gradient(circle, #fbfbf6 0%, #d8e2dc 60%, rgba(216, 226, 220, 0) 80%);
+  box-shadow: 0 0 45px rgba(230, 240, 255, 0.5);
+  top: 12%;
+  right: 20%;
+  width: 75px;
+  height: 75px;
+}
+
+.clouds {
+  position: absolute;
+  width: 250px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50px;
+  filter: blur(16px);
+  animation: floatCloud 45s linear infinite;
+}
+
+.cloud-1 { top: 15%; left: -20%; }
+.cloud-2 { top: 28%; left: -40%; animation-duration: 65s; animation-delay: -20s; }
+
+.mist-layer {
+  position: absolute;
+  bottom: 12%;
+  left: 0;
+  width: 100%;
+  height: 35%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.35) 60%, rgba(180, 205, 185, 0.4) 100%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+/* Ambient canvas for floating pollen, petals, and fireflies */
+#ambientCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ==========================================================
+   GARDEN LAYERS & GROUND
+   ========================================================== */
+.garden-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  cursor: crosshair;
+}
+
+.horizon-hills {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 38%;
+  background: radial-gradient(ellipse 130% 60% at 50% 100%, rgba(120, 155, 125, 0.4) 0%, rgba(145, 175, 150, 0.2) 60%, transparent 100%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.layer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.layer-back {
+  z-index: 11;
+  filter: blur(1px) brightness(0.92);
+  opacity: 0.85;
+  transform: scale(0.85);
+  transform-origin: bottom center;
+}
+
+.layer-mid {
+  z-index: 12;
+}
+
+.layer-front {
+  z-index: 13;
+  transform: scale(1.05);
+  transform-origin: bottom center;
+}
+
+.grass-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 75px;
+  background: linear-gradient(180deg, transparent 0%, var(--ground-light) 40%, var(--ground-dark) 100%);
+  z-index: 20;
+  border-radius: 40px 40px 0 0 / 20px 20px 0 0;
+  box-shadow: 0 -10px 25px rgba(40, 60, 45, 0.12);
+  pointer-events: none;
+}
+
+/* ==========================================================
+   FLOWER STRUCTURE & SWAYING ANIMATIONS (Hoa đung đưa)
+   ========================================================== */
+.flower-item {
+  position: absolute;
+  bottom: 30px;
+  transform-origin: bottom center;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.flower-item:hover {
+  filter: drop-shadow(0 6px 16px rgba(230, 160, 180, 0.45));
+}
+
+.flower-item:hover .flower-head {
+  transform: scale(1.12);
+}
+
+/* Main stem sway: Bending left and right smoothly */
+@keyframes naturalSway {
+  0% {
+    transform: rotate(calc(-4.5deg * var(--wind-factor))) skewX(calc(-1deg * var(--wind-factor)));
+  }
+  50% {
+    transform: rotate(calc(4.5deg * var(--wind-factor))) skewX(calc(1.5deg * var(--wind-factor)));
+  }
+  100% {
+    transform: rotate(calc(-4.5deg * var(--wind-factor))) skewX(calc(-1deg * var(--wind-factor)));
+  }
+}
+
+/* Secondary sway for the flower head with inertia lag */
+@keyframes headSway {
+  0% {
+    transform: rotate(calc(-5deg * var(--wind-factor))) translateX(calc(-2px * var(--wind-factor)));
+  }
+  50% {
+    transform: rotate(calc(5deg * var(--wind-factor))) translateX(calc(2px * var(--wind-factor)));
+  }
+  100% {
+    transform: rotate(calc(-5deg * var(--wind-factor))) translateX(calc(-2px * var(--wind-factor)));
+  }
+}
+
+/* Sprout animation when user clicks to plant */
+@keyframes sproutUp {
+  0% {
+    transform: scale(0.1) translateY(80px);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08) translateY(-4px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.sprouting {
+  animation: sproutUp 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+
+/* Stem */
+.flower-stem {
+  position: relative;
+  width: 4px;
+  background: linear-gradient(90deg, var(--stem-color) 0%, var(--stem-highlight) 60%, var(--stem-color) 100%);
+  border-radius: 4px;
+}
+
+/* Leaves */
+.flower-leaf {
+  position: absolute;
+  width: 22px;
+  height: 12px;
+  background: radial-gradient(circle at 30% 30%, #8db488 0%, var(--leaf-color) 70%, #52754f 100%);
+  border-radius: 50% 10% 50% 10%;
+  transform-origin: left center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.flower-leaf.leaf-left {
+  left: -20px;
+  top: 45%;
+  transform: rotate(-35deg);
+  animation: leafSwayLeft 4s ease-in-out infinite alternate;
+}
+
+.flower-leaf.leaf-right {
+  left: 2px;
+  top: 55%;
+  transform: rotate(35deg) scaleX(-1);
+  animation: leafSwayRight 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes leafSwayLeft {
+  0% { transform: rotate(-40deg); }
+  100% { transform: rotate(-25deg); }
+}
+
+@keyframes leafSwayRight {
+  0% { transform: rotate(40deg) scaleX(-1); }
+  100% { transform: rotate(25deg) scaleX(-1); }
+}
+
+/* Flower Head wrapper */
+.flower-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center bottom;
+  transition: transform 0.3s ease;
+}
+
+/* ------------------------------------
+   FLOWER VARIETIES (Các giống hoa nhẹ nhàng)
+   ------------------------------------ */
+
+/* TYPE 1: COSMOS / CÁNH BƯỚM (Dịu dàng, nhiều cánh) */
+.flower-type-cosmos .petal {
+  position: absolute;
+  width: 14px;
+  height: 32px;
+  background: linear-gradient(180deg, var(--petal-pink) 0%, var(--petal-blush) 70%, #e28e9f 100%);
+  border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%;
+  transform-origin: center bottom;
+  box-shadow: 0 1px 3px rgba(180, 100, 130, 0.12);
+}
+
+.flower-type-cosmos .flower-core {
+  position: relative;
+  z-index: 5;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe676 0%, #f4a261 80%, #d47a38 100%);
+  box-shadow: 0 0 5px rgba(255, 214, 102, 0.6);
+}
+
+/* TYPE 2: TULIP / UẤT KIM HƯƠNG (Thanh lịch, khép nép) */
+.flower-type-tulip .tulip-cup {
+  position: relative;
+  width: 34px;
+  height: 44px;
+}
+
+.flower-type-tulip .tulip-petal {
+  position: absolute;
+  bottom: 0;
+  width: 22px;
+  height: 42px;
+  border-radius: 50% 50% 45% 45% / 70% 70% 30% 30%;
+  background: linear-gradient(180deg, var(--petal-peach) 0%, var(--petal-rose) 90%);
+}
+
+.flower-type-tulip .tulip-petal.p-left {
+  left: 0;
+  transform: rotate(-12deg);
+  opacity: 0.95;
+}
+
+.flower-type-tulip .tulip-petal.p-right {
+  right: 0;
+  transform: rotate(12deg);
+  opacity: 0.95;
+}
+
+.flower-type-tulip .tulip-petal.p-center {
+  left: 6px;
+  height: 44px;
+  width: 22px;
+  background: linear-gradient(180deg, #ffe5d9 0%, var(--petal-blush) 85%);
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(180, 100, 120, 0.15);
+}
+
+/* TYPE 3: DAISY / CÚC HOẠ MI (Thuần khiết, giản dị) */
+.flower-type-daisy .petal {
+  position: absolute;
+  width: 10px;
+  height: 28px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--petal-cream) 75%, #ebd7c5 100%);
+  border-radius: 50% 50% 35% 35%;
+  transform-origin: center bottom;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.flower-type-daisy .flower-core {
+  position: relative;
+  z-index: 5;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe066 30%, #f7b731 85%, #d18d18 100%);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* TYPE 4: LAVENDER / OẢI HƯƠNG (Tím mộng mơ, mềm mại) */
+.flower-type-lavender .lavender-stalk {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: -4px;
+}
+
+.flower-type-lavender .lavender-bud {
+  width: 14px;
+  height: 10px;
+  background: linear-gradient(135deg, var(--petal-lavender) 0%, #b892ff 70%, #9381ff 100%);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(130, 100, 190, 0.18);
+}
+
+/* TYPE 5: ROSE / MẪU ĐƠN MINI (Lãng mạn ngày 20/10) */
+.flower-type-rose .rose-bloom {
+  position: relative;
+  width: 40px;
+  height: 38px;
+}
+
+.flower-type-rose .rose-layer {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.flower-type-rose .rose-layer-1 {
+  width: 38px;
+  height: 38px;
+  background: radial-gradient(circle, #fcd5ce 0%, #f4acb7 80%, #e28e9f 100%);
+}
+
+.flower-type-rose .rose-layer-2 {
+  width: 28px;
+  height: 28px;
+  background: radial-gradient(circle, #fde2e4 0%, #f28482 90%);
+}
+
+.flower-type-rose .rose-layer-3 {
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle, #ffe5ec 20%, #d85776 100%);
+}
+
+.flower-type-rose .rose-core {
+  width: 8px;
+  height: 8px;
+  background: #b53856;
+  border-radius: 50%;
+}
+
+/* Subtle glow for flowers in moonlight */
+body.theme-moonlight .flower-core,
+body.theme-moonlight .flower-head {
+  filter: drop-shadow(0 0 8px rgba(220, 210, 255, 0.45));
+}
+
+/* ==========================================================
+   BUTTERFLIES (Bướm bay lượn sinh động)
+   ========================================================== */
+.butterfly {
+  position: absolute;
+  width: 22px;
+  height: 18px;
+  z-index: 25;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  transition: transform 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  filter: drop-shadow(0 4px 8px rgba(100, 70, 90, 0.2));
+}
+
+.wing {
+  width: 12px;
+  height: 16px;
+  background: linear-gradient(135deg, rgba(255, 214, 224, 0.9) 0%, rgba(247, 175, 190, 0.75) 60%, rgba(255, 230, 180, 0.8) 100%);
+  border-radius: 60% 40% 60% 40%;
+  transform-origin: right center;
+  animation: flapLeft 0.28s ease-in-out infinite alternate;
+}
+
+.wing-right {
+  transform-origin: left center;
+  transform: scaleX(-1);
+  animation: flapRight 0.28s ease-in-out infinite alternate;
+}
+
+@keyframes flapLeft {
+  0% { transform: scaleX(1) rotate(0deg); }
+  100% { transform: scaleX(0.15) rotate(15deg); }
+}
+
+@keyframes flapRight {
+  0% { transform: scaleX(-1) rotate(0deg); }
+  100% { transform: scaleX(-0.15) rotate(-15deg); }
+}
+
+/* ==========================================================
+   HEADER & 20/10 GREETING CARD (Glassmorphism trang nhã)
+   ========================================================== */
+.garden-header {
+  position: absolute;
+  top: 28px;
+  left: 36px;
+  max-width: min(520px, calc(100vw - 220px));
+  z-index: 30;
+  pointer-events: none;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Language Switcher (EN / MN / VI) */
+.lang-switch {
+  position: absolute;
+  top: 28px;
+  right: 36px;
+  z-index: 60;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  box-shadow: var(--glass-shadow);
+}
+
+.lang-btn {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.lang-btn:hover {
+  color: var(--text-primary);
+  background: var(--btn-hover-bg);
+}
+
+.lang-btn.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--accent-rose);
+  box-shadow: 0 2px 10px rgba(216, 112, 136, 0.2);
+}
+
+.lang-btn:focus-visible,
+.dock-btn:focus-visible {
+  outline: 2px solid var(--accent-rose);
+  outline-offset: 2px;
+}
+
+.badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-rose);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(150, 100, 120, 0.08);
+  letter-spacing: 0.4px;
+}
+
+.garden-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.6);
+  letter-spacing: -0.5px;
+}
+
+.garden-subtitle {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-shadow: 0 1px 6px rgba(255, 255, 255, 0.5);
+}
+
+body.theme-moonlight .garden-title,
+body.theme-moonlight .garden-subtitle {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================
+   FLOWER WISH BUBBLE (Bóng thoại lời chúc khi ấn vào hoa)
+   ========================================================== */
+.flower-bubble {
+  position: fixed;
+  z-index: 80;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 14px 18px;
+  box-shadow: 0 14px 35px rgba(90, 60, 75, 0.16);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.85);
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+              transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.flower-bubble.active {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
+/* Bóng thoại hiện bên dưới bông hoa khi không đủ chỗ phía trên */
+.flower-bubble.below {
+  transform: translate(-50%, 0) scale(0.85);
+}
+
+.flower-bubble.below.active {
+  transform: translate(-50%, 0) scale(1);
+}
+
+.flower-bubble.below .bubble-arrow {
+  bottom: auto;
+  top: -7px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.bubble-tag {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent-rose);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 5px;
+}
+
+.bubble-text {
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-family: 'Quicksand', 'Comfortaa', sans-serif;
+}
+
+.bubble-arrow {
+  position: absolute;
+  bottom: -7px;
+  left: var(--arrow-x, 50%);
+  transform: translateX(-50%) rotate(45deg);
+  width: 14px;
+  height: 14px;
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+body.theme-moonlight .flower-bubble {
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================
+   BOTTOM DOCK CONTROLS (Thanh điều khiển)
+   ========================================================== */
+.garden-dock {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--glass-border);
+  border-radius: 30px;
+  padding: 8px 14px;
+  box-shadow: var(--glass-shadow);
+  z-index: 50;
+}
+
+.dock-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 9px 16px;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dock-btn:hover {
+  background: var(--btn-hover-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 70, 80, 0.08);
+}
+
+.dock-btn.active {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--accent-rose);
+  box-shadow: 0 4px 14px rgba(216, 112, 136, 0.18);
+}
+
+.dock-icon {
+  font-size: 1.1rem;
+}
+
+/* ==========================================================
+   ANIMATIONS & KEYFRAMES
+   ========================================================== */
+@keyframes floatCloud {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(130vw); }
+}
+
+@keyframes gentlePulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.06); filter: brightness(1.08); }
+}
+
+/* ==========================================================
+   RESPONSIVE DESIGN
+   ========================================================== */
+@media (max-width: 768px) {
+  .garden-header {
+    top: 18px;
+    left: 20px;
+  }
+  /* Nút ngôn ngữ ở góc phải, tiêu đề xuống dưới để không bị chồng lên nhau */
+  .garden-header {
+    top: 72px;
+    right: 20px;
+    max-width: none;
+  }
+  .lang-switch {
+    top: 16px;
+    right: 16px;
+  }
+  .garden-title {
+    font-size: 1.8rem;
+  }
+  .garden-subtitle {
+    font-size: 0.88rem;
+  }
+  .garden-dock {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: calc(100vw - 32px);
+    justify-content: space-around;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 24px;
+  }
+  /* Giữ chữ nhỏ dưới icon để người dùng biết từng nút làm gì */
+  .dock-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 4px;
+    border-radius: 16px;
+  }
+  .dock-btn:hover {
+    transform: none;
+  }
+  .dock-label {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
+    font-size: 0.68rem;
+    font-weight: 600;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .dock-icon {
+    font-size: 1.25rem;
+  }
+}
+
+/* Giảm chuyển động cho người dùng nhạy cảm với hiệu ứng */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================
+   HIDE NETLIFY BADGE / DRAWER (Ẩn logo Powered by Netlify)
+   ========================================================== */
+#netlify-badge,
+.netlify-badge,
+[data-netlify-deploy-id],
+[class*="netlify-badge"],
+[id*="netlify-badge"],
+iframe[src*="netlify"],
+div:has(> a[href*="netlify"]),
+a[href*="netlify"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+}

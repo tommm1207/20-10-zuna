@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Healing Garden – For Hongor Zul</title>
+  <!-- Google Fonts: Quicksand & Playfair Display (+ Comfortaa làm font dự phòng cho chữ Kirin tiếng Mông Cổ) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Quicksand:wght@300;400;500;600&family=Comfortaa:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-sunrise">
+  <!-- Sky background layers & sun/moon -->
+  <div class="sky-container" id="skyContainer">
+    <div class="celestial-body"></div>
+    <div class="clouds cloud-1"></div>
+    <div class="clouds cloud-2"></div>
+    <div class="mist-layer"></div>
+  </div>
+
+  <!-- Ambient canvas for floating petals & fireflies -->
+  <canvas id="ambientCanvas"></canvas>
+
+  <!-- Interactive Garden Container -->
+  <div class="garden-wrapper" id="gardenWrapper">
+    <!-- Distant hills / blurred background flora -->
+    <div class="horizon-hills"></div>
+
+    <!-- Flower Layers (Background, Midground, Foreground for depth) -->
+    <div class="layer layer-back" id="backFlowerLayer"></div>
+    <div class="layer layer-mid" id="midFlowerLayer"></div>
+    <div class="layer layer-front" id="frontFlowerLayer"></div>
+
+    <!-- Grass base blades at bottom -->
+    <div class="grass-ground" id="grassGround"></div>
+  </div>
+
+  <!-- Floating Butterflies -->
+  <div class="butterfly" id="butterfly1">
+    <div class="wing wing-left"></div>
+    <div class="wing wing-right"></div>
+  </div>
+  <div class="butterfly" id="butterfly2">
+    <div class="wing wing-left"></div>
+    <div class="wing wing-right"></div>
+  </div>
+
+  <!-- Header & Greeting Card (Glassmorphism) -->
+  <header class="garden-header">
+    <div class="header-content">
+      <span class="badge" data-i18n="badge">🌸 October 20 • For Hongor Zul</span>
+      <h1 class="garden-title" data-i18n="title">Healing Garden</h1>
+      <p class="garden-subtitle" data-i18n="subtitle">Tap a flower for a little note • Tap the ground to plant more</p>
+    </div>
+  </header>
+
+  <!-- Language Switcher (EN / MN / VI) -->
+  <div class="lang-switch" id="langSwitch" role="group" aria-label="Language">
+    <button class="lang-btn" data-lang="en" lang="en" title="English">EN</button>
+    <button class="lang-btn" data-lang="mn" lang="mn" title="Монгол">MN</button>
+    <button class="lang-btn" data-lang="vi" lang="vi" title="Tiếng Việt">VI</button>
+  </div>
+
+  <!-- Floating Flower Wish Popup / Speech Bubble -->
+  <div class="flower-bubble" id="flowerBubble" role="status" aria-live="polite">
+    <div class="bubble-arrow"></div>
+    <div class="bubble-tag" data-i18n="bubbleTag">🌸 A note for Hongor Zul</div>
+    <div class="bubble-text" id="bubbleText"></div>
+  </div>
+
+  <!-- Bottom Floating Control Panel -->
+  <nav class="garden-dock" data-i18n-aria="dockAria" aria-label="Garden controls">
+    <!-- Wind intensity toggle -->
+    <button class="dock-btn" id="btnWind" data-i18n-title="windTitle" title="Change wind strength">
+      <span class="dock-icon" aria-hidden="true">🍃</span>
+      <span class="dock-label" id="windLabel">Gentle breeze</span>
+    </button>
+
+    <!-- Theme changer (Sunrise / Sunset / Moonlight) -->
+    <button class="dock-btn" id="btnTheme" data-i18n-title="themeTitle" title="Change time of day">
+      <span class="dock-icon" id="themeIcon" aria-hidden="true">🌅</span>
+      <span class="dock-label" id="themeLabel">Sunrise</span>
+    </button>
+
+    <!-- Bloom all / Re-plant garden -->
+    <button class="dock-btn" id="btnReplant" data-i18n-title="replantTitle" title="Water the garden to refresh it">
+      <span class="dock-icon" aria-hidden="true">💧</span>
+      <span class="dock-label" data-i18n="replantLabel">Water</span>
+    </button>
+
+    <!-- Soft Audio Toggle (Web Audio API Synthesizer) -->
+    <button class="dock-btn" id="btnAudio" data-i18n-title="audioTitle" title="Turn wind chimes on/off" aria-pressed="false">
+      <span class="dock-icon" id="audioIcon" aria-hidden="true">🔔</span>
+      <span class="dock-label" id="audioLabel">Wind chimes</span>
+    </button>
+  </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>
